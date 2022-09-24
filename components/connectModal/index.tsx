@@ -1,12 +1,11 @@
 import React, { FC } from "react";
 // import { useConnect, useDisconnect } from "wagmi";
 import Image from "next/image";
+import { useConnect } from "wagmi";
 import BaseModal, { BaseModalProps } from "components/baseModal";
 import metaMaskIcon from "public/assets/metamask.svg";
 import walletConnectIcon from "public/assets/wallet_connect.svg";
 import coinbaseWalletIcon from "public/assets/coinbase.svg";
-
-import { useConnect } from "wagmi";
 
 type ConnectModalProps = {
   modalTitle: string;
