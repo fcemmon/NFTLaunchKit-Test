@@ -1,28 +1,12 @@
-import React, { FC, useState } from "react";
+import React, { FC } from "react";
+// import { useConnect, useDisconnect } from "wagmi";
 import Image from "next/image";
 import BaseModal, { BaseModalProps } from "components/baseModal";
-import MatamaskIcon from "public/assets/metamask.svg";
-import WalletConnectIcon from "public/assets/wallet_connect.svg";
-import CoinbaseIcon from "public/assets/coinbase.svg";
-import { InjectedConnector } from "@web3-react/injected-connector";
-import { WalletLinkConnector } from "@web3-react/walletlink-connector";
-import { WalletConnectConnector } from "@web3-react/walletconnect-connector";
-import { useWeb3React } from "@web3-react/core";
+import metaMaskIcon from "public/assets/metamask.svg";
+import walletConnectIcon from "public/assets/wallet_connect.svg";
+import coinbaseWalletIcon from "public/assets/coinbase.svg";
 
-const Injected = new InjectedConnector({
-  supportedChainIds: [1, 3, 4, 5, 42]
-});
-
-const CoinbaseWallet = new WalletLinkConnector({
-  url: `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
-  appName: "Web3-react Demo",
-  supportedChainIds: [1, 3, 4, 5, 42],
-});
-
-const WalletConnect = new WalletConnectConnector({
-  bridge: "https://bridge.walletconnect.org",
-  qrcode: true,
-});
+import { useConnect } from "wagmi";
 
 type ConnectModalProps = {
   modalTitle: string;
@@ -30,7 +14,14 @@ type ConnectModalProps = {
 } & BaseModalProps;
 
 const ConnectModal: FC<ConnectModalProps> = ({ open, onClose, modalTitle }) => {
-  const { activate, deactivate } = useWeb3React();
+  const { connect, connectors, error, isLoading, pendingConnector } =
+    useConnect();
+
+  const Icons = {
+    metaMaskIcon,
+    walletConnectIcon,
+    coinbaseWalletIcon,
+  };
 
   return (
     <BaseModal open={open} onClose={onClose} title={modalTitle}>
@@ -38,36 +29,39 @@ const ConnectModal: FC<ConnectModalProps> = ({ open, onClose, modalTitle }) => {
         Connect with one of our available wallet providers or create a new one.
       </p>
       <div className=" py-2">
-        <div className="mt-4 relative">
-          <button className="w-full big-btn bg-gray-100 gap-2 !justify-start" onClick={() => {
-            activate(Injected);
-            onClose();
-          }}>
-            <Image src={MatamaskIcon} alt={"metamask"} width={24} height={24} />
-            MetaMask
-          </button>
-          <span className="absolute text-xs font-medium text-gray-500 bg-gray-200 rounded-3xl px-3 py-1 top-3 right-4">
-            Popular
-          </span>
-        </div>
-        <div className="mt-4">
-          <button className="w-full big-btn bg-gray-100 gap-2 !justify-start" onClick={() => {
-            activate(CoinbaseWallet);
-            onClose();
-          }}>
-            <Image src={CoinbaseIcon} alt={"coinbase"} width={24} height={24} />
-            Coinbase Wallet
-          </button>
-        </div>
-        <div className="mt-4">
-          <button className="w-full big-btn bg-gray-100 gap-2 !justify-start" onClick={() => {
-            activate(WalletConnect);
-            onClose();
-          }}>
-            <Image src={WalletConnectIcon} alt={"wallet connect"} width={24} height={24} />
-            WalletConnect
-          </button>
-        </div>
+        {connectors.map((connector: any, index: number) => (
+          <div
+            className={
+              connector.id == "metaMask" ? "mt-4" + " relative" : "mt-4"
+            }
+            key={index}
+          >
+            <button
+              disabled={!connector.ready}
+              className="w-full big-btn bg-gray-100 gap-2 !justify-start"
+              onClick={() => connect({ connector })}
+            >
+              <Image
+                src={Icons[connector.id + "Icon"]}
+                alt={"coinbase"}
+                width={24}
+                height={24}
+              />
+              {connector.name}
+              {!connector.ready && " (unsupported)"}
+              {isLoading &&
+                connector.id === pendingConnector?.id &&
+                " (connecting)"}
+            </button>
+            {connector.id == "metaMask" && (
+              <span className="absolute text-xs font-medium text-gray-500 bg-gray-200 rounded-3xl px-3 py-1 top-3 right-4">
+                Popular
+              </span>
+            )}
+          </div>
+        ))}
+
+        {error && <div>{error.message}</div>}
       </div>
     </BaseModal>
   );

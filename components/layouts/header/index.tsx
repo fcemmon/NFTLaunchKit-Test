@@ -4,6 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import LogoIcon from "public/assets/logo.svg";
 import ConnectModal from "components/connectModal";
+
+import { useAccount, useDisconnect } from "wagmi";
+
 type HeaderProps = {
   type?: string;
 };
@@ -22,18 +25,28 @@ const Header: FC<HeaderProps> = ({ type }) => {
     { id: MENU_NUMBER.EXPLORE, title: "Explore", link: "/explore" },
     { id: MENU_NUMBER.PRICING, title: "Pricing", link: "/pricing" },
     { id: MENU_NUMBER.PRICING, title: "Membership", link: "/membership" },
-    { id: MENU_NUMBER.START_BUILDING, title: "Start Building", link: "/dashboard" },
+    {
+      id: MENU_NUMBER.START_BUILDING,
+      title: "Start Building",
+      link: "/dashboard",
+    },
   ];
 
   const router = useRouter();
   const [openConnectModal, setOpenConnectModal] = useState<boolean>(false);
+
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
 
   return (
     <div className="min-h-full bg-transparent shadow-sm">
       <div className="container mx-auto px-8 flex items-center h-20 text-gray-600">
         <div className="flex items-center justify-between w-full">
           {/* logo icon */}
-          <button className="w-32 flex items-center justify-center" onClick={() => router.push("/")}>
+          <button
+            className="w-32 flex items-center justify-center"
+            onClick={() => router.push("/")}
+          >
             <Image src={LogoIcon} alt="logo" />
           </button>
           {/* menu items */}
@@ -45,9 +58,27 @@ const Header: FC<HeaderProps> = ({ type }) => {
                 </Link>
               );
             })}
-            <button className="big-btn nlk-gradient" onClick={() => setOpenConnectModal(true)}>
-              Connect
-            </button>
+
+            {!isConnected && (
+              <button
+                className="big-btn nlk-gradient"
+                onClick={() => setOpenConnectModal(true)}
+              >
+                Connect
+              </button>
+            )}
+
+            {isConnected && (
+              <>
+                <p>{address}</p>
+                <button
+                  className="big-btn nlk-gradient"
+                  onClick={() => disconnect()}
+                >
+                  Disconnect
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
